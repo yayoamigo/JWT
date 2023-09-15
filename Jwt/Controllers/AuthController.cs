@@ -67,6 +67,35 @@ namespace Jwt.Controllers
                 return BadRequest(ModelState);
             
         }
+
+        [HttpPost]
+        [Route("Login")]
+        public async Task<IActionResult> Login([FromBody] UserLogin userLogin)
+        {
+            if(ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(userLogin.Email);
+                if(user != null && await _userManager.CheckPasswordAsync(user, userLogin.Password))
+                {
+                    var token = GenerateJwtToken(user);
+                    return Ok(new AuthResponse()
+                    {
+                        Token = token,
+                        Result = true
+                    });
+                }
+                return Unauthorized(new AuthResponse()
+                {
+                    Result = false,
+                    Message = "Email or password incorrect"
+                });
+            }
+            return BadRequest(ModelState);
+        }
+
+
+
+
         private string GenerateJwtToken(ApplicationUser user)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
